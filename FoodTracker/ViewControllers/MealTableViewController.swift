@@ -20,9 +20,17 @@ class MealTableViewController: UITableViewController {
         // Use the edit button provided by the the tableview controller
         navigationItem.leftBarButtonItem = editButtonItem
         
+        // Load any saved meals, otherwise load sample data
         
-        // Load the sample data
-        loadSampleMeals()
+        if let savedMeals = loadMeals() {
+            meals += savedMeals
+        } else {
+            // Load the sample data
+            loadSampleMeals()
+        }
+        
+        
+        
         
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
@@ -74,6 +82,7 @@ class MealTableViewController: UITableViewController {
         if editingStyle == .delete {
             // Delete the row from the data source
             meals.remove(at: indexPath.row)
+            saveMeals()
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
@@ -148,7 +157,7 @@ class MealTableViewController: UITableViewController {
                 tableView.reloadRows(at: [selectedIndexPath], with: .none)
                 
             } else {
-                
+               
                 //Add a new meal
                 let newIndexPath = IndexPath(row: meals.count, section: 0)
                 
@@ -157,6 +166,9 @@ class MealTableViewController: UITableViewController {
                 
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
             }
+            
+            // Save the meals.
+            saveMeals()
             
         }
     }
@@ -184,19 +196,27 @@ class MealTableViewController: UITableViewController {
     }
     
     private func saveMeals() {
-        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(meals, toFile: Meal.ArchiveURL.path)
-        
-//        let isSuccessfulSave = NSKeyedArchiver.archivedData(withRootObject: <#T##Any#>, requiringSecureCoding: <#T##Bool#>)
-        
-        if isSuccessfulSave {
-            os_log("Meals successfully saved.", log: OSLog.default, type: .debug)
-        } else {
+
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: meals, requiringSecureCoding: false)
+            try data.write(to: Meal.ArchiveURL)
+        } catch {
             os_log("Failed to save meals...", log: OSLog.default, type: .error)
         }
     }
     
     private func loadMeals() -> [Meal]? {
-        return NSKeyedUnarchiver.unarchiveObject(withFile: Meal.ArchiveURL.path) as? [Meal]
+        var innerMeals = [Meal]()
+        do {
+            let data = try Data(contentsOf: Meal.ArchiveURL)
+            if let savedMeals = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [Meal] {
+                innerMeals = savedMeals
+            }
+
+        } catch {
+            os_log("Unable to read Achrived file", log: OSLog.default, type: .error)
+        }
+        return innerMeals
     }
     
 }
