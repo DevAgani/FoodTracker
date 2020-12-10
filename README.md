@@ -28,6 +28,6 @@
 
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/agani_dev) - email
+Your Name - [@agani_dev](https://twitter.com/agani_dev) - dev.things.ke@gmail.com
 
 Project Link: [https://github.com/DevAgani/FoodTracker](https://github.com/DevAgani/FoodTracker)
